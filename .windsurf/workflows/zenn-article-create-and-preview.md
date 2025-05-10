@@ -1,10 +1,10 @@
 ---
-description: Zenn CLIで記事を新規作成しプレビューする方法
+description: Zenn CLIで記事を新規作成しプレビューする
 ---
 
 # Zenn CLIを使って記事を新規作成し、プレビューするワークフロー
 
-このワークフローは、[Zenn CLI公式ガイド](https://zenn.dev/zenn/articles/zenn-cli-guide) を基に、Zennで新しい記事を作成しローカルでプレビューする手順をまとめたものです。
+このワークフローは、[Zenn CLI公式ガイド](https://zenn.dev/zenn/articles/zenn-cli-guide) を基に、Zennで新しい記事を作成しローカルでプレビューする手順をまとめたもの
 
 ## 手順
 
