@@ -83,11 +83,10 @@ git remote add origin git@github.com:YOUR-USER/$(basename "$PWD").git
 
 ## Action 7 — Push to GitHub
 
+
 ```bash
 git push -u origin main   # first push sets upstream
 ```
-
-The MCP GitHub Server tool signs the request and finalizes repository creation (if it didn’t exist yet).
 
 ---
 
