@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "dbt-labs.vscode-dbt-power-user",
+    "bastienboutonnet.vscode-dbt",
+    "dorzey.vscode-sqlfluff",
+    "redhat.vscode-yaml",
+    "samuelcolvin.jinjahtml",
+    "ms-python.python",
+    "ms-python.pylint",
+    "ms-python.flake8",
+    "ms-vscode.vscode-json",
+    "eamodio.gitlens"
+  ],
+  "unwantedRecommendations": [
+    "ms-mssql.mssql"
+  ]
+}

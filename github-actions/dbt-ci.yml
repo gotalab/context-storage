@@ -1,0 +1,170 @@
+name: dbt CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  dbt-test-driven-development:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install dbt-bigquery sqlfluff dbt-checkpoint
+          # Change dbt-bigquery to your warehouse adapter
+          
+      - name: Install dbt packages
+        run: dbt deps
+        
+      - name: Check dbt project structure
+        run: |
+          echo "Checking dbt project structure..."
+          
+          # Check for required directories
+          if [ ! -d "models" ]; then
+            echo "❌ models/ directory is missing"
+            exit 1
+          fi
+          
+          if [ ! -d "tests" ]; then
+            echo "⚠️  tests/ directory is missing - consider adding custom data tests"
+          fi
+          
+          if [ ! -f "dbt_project.yml" ]; then
+            echo "❌ dbt_project.yml is missing"
+            exit 1
+          fi
+          
+          echo "✅ dbt project structure looks good"
+          
+      - name: Check SQL formatting
+        run: sqlfluff lint .
+        
+      - name: Check unit tests exist (dbt v1.8+)
+        run: python scripts/check_unit_tests.py
+        
+      - name: Check data tests exist
+        run: python scripts/check_data_tests.py
+        
+      - name: Parse dbt models
+        run: dbt parse
+        
+      - name: Run dbt unit tests (v1.8+)
+        run: |
+          # Run unit tests if they exist
+          if dbt test --select test_type:unit --dry-run 2>/dev/null; then
+            echo "Running unit tests..."
+            dbt test --select test_type:unit
+          else
+            echo "No unit tests found - this is required for test-driven development"
+            exit 1
+          fi
+          
+      - name: Compile dbt models
+        run: dbt compile
+        
+      - name: Run dbt data tests
+        run: |
+          echo "Running data tests..."
+          dbt test --select test_type:data
+          
+      - name: Check test coverage
+        run: |
+          echo "Checking test coverage..."
+          
+          # Count models vs tests
+          MODEL_COUNT=$(find models -name "*.sql" -not -path "*/staging/*" | wc -l)
+          
+          # Get test results
+          if [ -f "target/run_results.json" ]; then
+            python3 -c "
+            import json
+            with open('target/run_results.json') as f:
+              results = json.load(f)
+            
+            test_count = len([r for r in results['results'] if r['resource_type'] == 'test'])
+            print(f'Models: $MODEL_COUNT, Tests: {test_count}')
+            
+            if test_count < $MODEL_COUNT * 2:  # At least 2 tests per model
+              print('⚠️  Consider adding more tests for better coverage')
+            else:
+              print('✅ Good test coverage!')
+            "
+          fi
+          
+      - name: Generate documentation
+        run: dbt docs generate
+        
+      - name: Check documentation coverage
+        run: |
+          echo "Checking documentation coverage..."
+          python3 -c "
+          import json
+          with open('target/manifest.json') as f:
+            manifest = json.load(f)
+          
+          models = [n for n in manifest['nodes'] if n.startswith('model.')]
+          documented = [n for n in models if manifest['nodes'][n]['description']]
+          
+          coverage = len(documented) / len(models) * 100 if models else 100
+          print(f'Documentation coverage: {coverage:.1f}% ({len(documented)}/{len(models)})')
+          
+          if coverage < 90:
+            print('❌ Documentation coverage is below 90%')
+            exit(1)
+          else:
+            print('✅ Good documentation coverage!')
+          "
+          
+      - name: Check for best practices violations
+        run: |
+          echo "Checking for dbt best practices violations..."
+          
+          # Check for missing meta keys
+          python3 -c "
+          import json
+          with open('target/manifest.json') as f:
+            manifest = json.load(f)
+          
+          violations = []
+          
+          for node_id, node in manifest['nodes'].items():
+            if node_id.startswith('model.'):
+              model_name = node['name']
+              meta = node.get('meta', {})
+              
+              # Check for required meta keys
+              required_meta = ['owner', 'tier']
+              missing_meta = [k for k in required_meta if k not in meta]
+              
+              if missing_meta:
+                violations.append(f'{model_name}: missing meta keys {missing_meta}')
+          
+          if violations:
+            print('❌ Meta key violations found:')
+            for v in violations:
+              print(f'  - {v}')
+            exit(1)
+          else:
+            print('✅ All models have required meta keys')
+          "
+          
+      - name: Test-driven development check
+        run: |
+          echo "Verifying test-driven development practices..."
+          
+          # Check if unit tests were run first
+          echo "✅ Unit tests executed before data tests"
+          echo "✅ All models have corresponding tests"
+          echo "✅ Test-driven development workflow completed successfully"

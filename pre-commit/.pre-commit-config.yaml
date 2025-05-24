@@ -1,0 +1,105 @@
+repos:
+  # General code quality
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: pretty-format-json
+        args: ['--autofix']
+
+  # SQL formatting and linting
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.7
+    hooks:
+      - id: sqlfluff-lint
+        args: [--dialect=bigquery]  # Change to your warehouse
+        additional_dependencies: ['dbt-bigquery', 'sqlfluff-templater-dbt']
+      - id: sqlfluff-fix
+        args: [--dialect=bigquery]  # Change to your warehouse
+        additional_dependencies: ['dbt-bigquery', 'sqlfluff-templater-dbt']
+
+  # dbt-specific hooks
+  - repo: https://github.com/dbt-checkpoint/dbt-checkpoint
+    rev: v1.2.1
+    hooks:
+      - id: check-model-has-description
+        name: Check model has description
+        description: Ensure all models have descriptions
+      - id: check-model-has-meta-keys
+        name: Check model has required meta keys
+        args: ['--meta-keys', 'owner,tier']
+      - id: check-model-columns-have-desc
+        name: Check model columns have descriptions
+        description: Ensure all model columns have descriptions
+      - id: check-model-has-contract
+        name: Check model has contract (dbt v1.5+)
+        description: Ensure models have contracts defined
+      - id: check-model-has-tests-by-name
+        name: Check model has tests
+        description: Ensure all models have at least one test
+        args: ['--tests', 'unique', 'not_null']
+      - id: check-model-has-tests-by-type
+        name: Check model has required test types
+        args: ['--tests', 'unique', 'not_null', 'accepted_values']
+      - id: check-source-has-freshness
+        name: Check source has freshness
+        description: Ensure sources have freshness defined
+      - id: check-source-has-loader
+        name: Check source has loader
+        description: Ensure sources have loader defined
+      - id: check-source-has-meta-keys
+        name: Check source has meta keys
+        args: ['--meta-keys', 'owner']
+      - id: check-source-table-has-description
+        name: Check source table has description
+        description: Ensure source tables have descriptions
+      - id: check-source-columns-have-desc
+        name: Check source columns have descriptions
+        description: Ensure source columns have descriptions
+      - id: check-snapshot-has-meta-keys
+        name: Check snapshot has meta keys
+        args: ['--meta-keys', 'owner,tier']
+      - id: check-seed-has-meta-keys
+        name: Check seed has meta keys
+        args: ['--meta-keys', 'owner']
+      - id: check-macro-has-description
+        name: Check macro has description
+        description: Ensure macros have descriptions
+      - id: check-macro-arguments-have-desc
+        name: Check macro arguments have descriptions
+        description: Ensure macro arguments have descriptions
+      - id: dbt-test
+        name: Run dbt tests
+        description: Run all dbt tests before commit
+      - id: dbt-docs-generate
+        name: Generate dbt docs
+        description: Generate dbt documentation
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types: [yaml]
+
+  # dbt v1.8+ specific: Unit test validation
+  - repo: local
+    hooks:
+      - id: check-unit-tests-exist
+        name: Check unit tests exist for models
+        entry: python scripts/check_unit_tests.py
+        language: python
+        files: models/.*\.sql$
+        additional_dependencies: [pyyaml]
+      - id: check-data-tests-exist
+        name: Check data tests exist for models
+        entry: python scripts/check_data_tests.py
+        language: python
+        files: models/.*\.sql$
+        additional_dependencies: [pyyaml]

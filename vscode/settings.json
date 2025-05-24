@@ -1,0 +1,42 @@
+{
+  "sqlfluff.format.enabled": true,
+  "sqlfluff.linter.enabled": true,
+  "sqlfluff.config.path": ".sqlfluff",
+  "files.associations": {
+    "*.sql": "jinja-sql",
+    "*.yml": "yaml",
+    "*.yaml": "yaml"
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.sqlfluff": "explicit"
+  },
+  "yaml.schemas": {
+    "https://schemas.getdbt.com/dbt/manifest/v12.json": [
+      "manifest.json"
+    ],
+    "https://schemas.getdbt.com/dbt/catalog/v1.json": [
+      "catalog.json"
+    ]
+  },
+  "files.watcherExclude": {
+    "**/dbt_packages/**": true,
+    "**/target/**": true,
+    "**/logs/**": true
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "dorzey.vscode-sqlfluff",
+    "editor.formatOnSave": true
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  },
+  "dbt.dbtPath": "dbt",
+  "dbt.queryLimit": 500,
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "emmet.includeLanguages": {
+    "jinja-sql": "sql"
+  }
+}

@@ -1,0 +1,264 @@
+# Example schema.yml demonstrating dbt v1.8+ unit tests and data tests
+
+# Unit tests (dbt v1.8+) - Test-driven development approach
+unit_tests:
+  # Test customer metrics calculation
+  - name: test_unit_customer_lifetime_value_calculation
+    model: customer_metrics
+    description: "Test that customer lifetime value is calculated correctly"
+    given:
+      # Mock input data for orders
+      - input: ref('stg_orders')
+        rows:
+          - {customer_id: 1, order_amount: 100.00, order_date: '2023-01-01', order_status: 'completed'}
+          - {customer_id: 1, order_amount: 150.00, order_date: '2023-02-01', order_status: 'completed'}
+          - {customer_id: 1, order_amount: 75.00, order_date: '2023-03-01', order_status: 'cancelled'}
+          - {customer_id: 2, order_amount: 200.00, order_date: '2023-01-15', order_status: 'completed'}
+      
+      # Mock input data for customers
+      - input: ref('stg_customers')
+        rows:
+          - {customer_id: 1, customer_name: 'John Doe', signup_date: '2022-12-01'}
+          - {customer_id: 2, customer_name: 'Jane Smith', signup_date: '2023-01-01'}
+    
+    # Expected output
+    expect:
+      rows:
+        - {customer_id: 1, customer_name: 'John Doe', total_orders: 2, lifetime_value: 250.00, avg_order_value: 125.00}
+        - {customer_id: 2, customer_name: 'Jane Smith', total_orders: 1, lifetime_value: 200.00, avg_order_value: 200.00}
+
+  # Test data filtering logic
+  - name: test_unit_customer_metrics_filters_cancelled_orders
+    model: customer_metrics
+    description: "Test that cancelled orders are excluded from metrics"
+    given:
+      - input: ref('stg_orders')
+        rows:
+          - {customer_id: 1, order_amount: 100.00, order_date: '2023-01-01', order_status: 'completed'}
+          - {customer_id: 1, order_amount: 999.00, order_date: '2023-02-01', order_status: 'cancelled'}
+      
+      - input: ref('stg_customers')
+        rows:
+          - {customer_id: 1, customer_name: 'Test Customer', signup_date: '2022-12-01'}
+    
+    expect:
+      rows:
+        - {customer_id: 1, customer_name: 'Test Customer', total_orders: 1, lifetime_value: 100.00, avg_order_value: 100.00}
+
+  # Test edge cases
+  - name: test_unit_customer_metrics_handles_zero_orders
+    model: customer_metrics
+    description: "Test handling of customers with no completed orders"
+    given:
+      - input: ref('stg_orders')
+        rows: []  # No orders
+      
+      - input: ref('stg_customers')
+        rows:
+          - {customer_id: 1, customer_name: 'New Customer', signup_date: '2023-01-01'}
+    
+    expect:
+      rows:
+        - {customer_id: 1, customer_name: 'New Customer', total_orders: 0, lifetime_value: 0.00, avg_order_value: null}
+
+# Sources configuration
+sources:
+  - name: raw_data
+    description: "Raw data from our application database"
+    meta:
+      owner: "data-engineering"
+      loader: "Fivetran"
+    
+    freshness:
+      warn_after: {count: 12, period: hour}
+      error_after: {count: 24, period: hour}
+    
+    tables:
+      - name: customers
+        description: "Raw customer data"
+        columns:
+          - name: customer_id
+            description: "Primary key for customers"
+            tests:
+              - not_null
+              - unique
+          - name: customer_name
+            description: "Customer full name"
+            tests:
+              - not_null
+          - name: email
+            description: "Customer email address"
+            tests:
+              - not_null
+          - name: signup_date
+            description: "Date customer signed up"
+            tests:
+              - not_null
+
+      - name: orders
+        description: "Raw order transactions"
+        columns:
+          - name: order_id
+            description: "Primary key for orders"
+            tests:
+              - not_null
+              - unique
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw_data', 'customers')
+                  field: customer_id
+
+# Models configuration with data tests
+models:
+  # Staging models
+  - name: stg_customers
+    description: "Cleaned and standardized customer data"
+    meta:
+      owner: "data-team"
+      tier: "bronze"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: "Customer full name"
+        tests:
+          - not_null
+      - name: email
+        description: "Customer email address"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "email LIKE '%@%'"
+      - name: signup_date
+        description: "Date customer created account"
+        tests:
+          - not_null
+
+  - name: stg_orders
+    description: "Cleaned and standardized order data"
+    meta:
+      owner: "data-team"
+      tier: "bronze"
+    columns:
+      - name: order_id
+        description: "Unique order identifier"
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Customer who placed the order"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: order_amount
+        description: "Total order amount in USD"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: order_date
+        description: "Date order was placed"
+        tests:
+          - not_null
+      - name: order_status
+        description: "Current order status"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['pending', 'completed', 'cancelled', 'refunded']
+
+  # Mart models
+  - name: customer_metrics
+    description: "Customer-level aggregated metrics and lifetime value"
+    meta:
+      owner: "analytics-team"
+      tier: "gold"
+      refresh_schedule: "daily"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: "Customer full name"
+        tests:
+          - not_null
+      - name: total_orders
+        description: "Total number of completed orders"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: lifetime_value
+        description: "Total amount spent by customer (completed orders only)"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: avg_order_value
+        description: "Average order value for completed orders"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+              condition: "avg_order_value IS NOT NULL"
+      - name: first_order_date
+        description: "Date of customer's first completed order"
+      - name: last_order_date
+        description: "Date of customer's most recent completed order"
+      - name: days_since_last_order
+        description: "Number of days since last order"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+              condition: "days_since_last_order IS NOT NULL"
+    
+    # Model-level tests
+    tests:
+      # Ensure no duplicate customers
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: ['customer_id']
+      
+      # Business rule: customers with orders should have positive lifetime value
+      - dbt_utils.expression_is_true:
+          expression: "total_orders = 0 OR lifetime_value > 0"
+          config:
+            severity: error
+      
+      # Referential integrity
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('stg_customers')
+
+# Metrics (dbt v1.6+)
+metrics:
+  - name: total_customers
+    description: "Total number of customers"
+    type: count
+    sql: customer_id
+    timestamp: signup_date
+    time_grains: [day, week, month, year]
+    dimensions:
+      - customer_tier
+    meta:
+      owner: "analytics-team"
+
+  - name: average_lifetime_value
+    description: "Average customer lifetime value"
+    type: average
+    sql: lifetime_value
+    timestamp: signup_date
+    time_grains: [month, quarter, year]
+    filters:
+      - field: total_orders
+        operator: '>'
+        value: '0'
+    meta:
+      owner: "analytics-team"

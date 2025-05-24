@@ -1,0 +1,134 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dbt: run",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["run"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: test",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: test (unit tests only)",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["test", "--select", "test_type:unit"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: test (data tests only)",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["test", "--select", "test_type:data"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: compile",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["compile"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: docs generate",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["docs", "generate"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dbt: build",
+      "type": "shell",
+      "command": "dbt",
+      "args": ["build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "sqlfluff: lint",
+      "type": "shell",
+      "command": "sqlfluff",
+      "args": ["lint", "."],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "sqlfluff: fix",
+      "type": "shell",
+      "command": "sqlfluff",
+      "args": ["fix", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
