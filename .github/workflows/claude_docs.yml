@@ -6,10 +6,13 @@ on:
     paths:
       # Only run when specific paths are modified
       - ".windsurf/**"
+      - "src/**"
       # You can add more specific patterns as needed
 
 jobs:
   claude-docs:
+    if: |
+      github.actor != 'claude'
     runs-on: ubuntu-latest
     permissions:
       contents: read
