@@ -9,7 +9,7 @@ on:
       # You can add more specific patterns as needed
 
 jobs:
-  claude-review-paths:
+  claude-docs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,14 +21,14 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Claude Create Docs
+      - name: Claude Create and Update Docs
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           trigger_phrase: "@claude-docs"
           assignee_trigger: "/claude-docs"
           direct_prompt: |
-            Please create docs for this pull request focusing on the changed files.
+            Please create or update docs for this pull request focusing on the changed files.
             The document should be created in docs/ directory in markdown format.
             Speak in Japanese.
             
