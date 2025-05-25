@@ -1,0 +1,35 @@
+name: Claude Review - Path Specific
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      # Only run when specific paths are modified
+      - ".windsurf/**"
+      # You can add more specific patterns as needed
+
+jobs:
+  claude-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Claude Create and Update Docs
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude-docs"
+          assignee_trigger: "/claude-docs"
+          direct_prompt: |
+            Please create or update docs for this pull request focusing on the changed files.
+            The document should be created in docs/ directory in markdown format.
+            Speak in Japanese.
+            
+            
