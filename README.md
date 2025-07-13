@@ -1,241 +1,294 @@
 # Context Storage
 
-新規プロジェクト作成時のAI開発環境初期セットアップを劇的に簡素化するテンプレート集です。
+AI対応IDEの**コンテキストエンジニアリング初期作業を完全にスキップ**し、新規プロジェクトで即座に最適化されたAI開発環境を実現するリポジトリです。
 
 ## 概要
 
-新しいプロジェクトを作成する度に、Claude Code、Cursor、Windsurf などの AI 対応 IDE の初期設定を一から行うのは非常に面倒です。このリポジトリは、技術スタック別に最適化された設定ファイル、ルール、フック、コマンドなどを事前に用意し、**ディレクトリをコピーするだけで、すぐに実運用レベルで AI IDE を使い始められる**ことを目的としています。
+新規プロジェクトを開始する度に、AI アシスタントに適切なコンテキストを与えるための**コンテキストエンジニアリング**作業が必要になります。Claude Code、Cursor、Windsurf などの AI 対応 IDE で効果的な開発を行うには、プロジェクトの性質、コーディング規約、ベストプラクティスなどの文脈を正確に伝える必要がありますが、この初期設定は非常に時間がかかる作業です。
+
+このリポジトリは、**IDE別に最適化された汎用的なコンテキスト設定**を提供し、**ファイルをコピーするだけで、コンテキストエンジニアリングの初期段階を完全にスキップ**できることを目的としています。
 
 ## ディレクトリ構成
 
 ```
 context-storage/
-├── python/                   # Python プロジェクト用テンプレート
-│   ├── .cursorrules         # Cursor 用ルール（Python特化）
-│   ├── CLAUDE.md            # Claude Code 用設定
-│   ├── .windsurf/           # Windsurf 用設定
-│   │   ├── rules/           # Python コーディングルール
-│   │   └── workflows/       # Python ワークフロー
-│   ├── .github/             # GitHub Actions テンプレート
-│   │   └── workflows/       # Python CI/CD
-│   ├── pyproject.toml       # Python 設定ファイル
-│   ├── .gitignore           # Python 用 gitignore
-│   └── setup-commands.md    # 初期セットアップコマンド集
+├── Claude-Code/              # Claude Code 用コンテキスト設定
+│   ├── CLAUDE.md            # メインコンテキストファイル
+│   ├── commands.md          # よく使うコマンド集
+│   ├── hooks/               # Claude Code 用フック設定
+│   ├── settings.json        # Claude Code 設定ファイル
+│   └── templates/           # 汎用的なファイルテンプレート
+│       ├── python-context.md
+│       ├── typescript-context.md
+│       └── web-context.md
 │
-├── typescript/              # TypeScript プロジェクト用テンプレート
-│   ├── .cursorrules         # TypeScript/Node.js ルール
-│   ├── CLAUDE.md            # Claude Code 設定
-│   ├── .windsurf/           # Windsurf 設定
-│   ├── package.json         # npm 設定テンプレート
-│   ├── tsconfig.json        # TypeScript 設定
-│   ├── .gitignore           # Node.js 用 gitignore
-│   └── setup-commands.md    # セットアップ手順
+├── Windsurf/                # Windsurf 用コンテキスト設定
+│   ├── rules/               # 汎用コーディングルール
+│   │   ├── general.md       # 一般的なコーディング原則
+│   │   ├── best-practices.md # ベストプラクティス
+│   │   └── code-quality.md  # コード品質ガイドライン
+│   ├── workflows/           # 汎用ワークフロー
+│   │   ├── development.md   # 開発フロー
+│   │   ├── testing.md       # テスト戦略
+│   │   └── deployment.md    # デプロイメント
+│   └── contexts/            # プロジェクトタイプ別コンテキスト
+│       ├── web-app.md
+│       ├── api-server.md
+│       └── data-analysis.md
 │
-├── react/                   # React プロジェクト用テンプレート
-│   ├── .cursorrules         # React/Next.js ルール
-│   ├── CLAUDE.md            # フロントエンド特化設定
-│   ├── .windsurf/           # React ワークフロー
-│   └── setup-commands.md    # React セットアップ
+├── Cursor/                  # Cursor 用コンテキスト設定
+│   ├── .cursorrules         # メインルールファイル
+│   ├── project-templates/   # プロジェクトタイプ別ルール
+│   │   ├── .cursorrules-python
+│   │   ├── .cursorrules-typescript
+│   │   └── .cursorrules-react
+│   ├── extensions.json      # 推奨拡張機能設定
+│   └── snippets/            # コードスニペット集
 │
-├── data-science/            # データサイエンス用テンプレート
-│   ├── .cursorrules         # Jupyter/pandas ルール
-│   ├── CLAUDE.md            # ML/AI 開発設定
-│   ├── .windsurf/           # データ分析ワークフロー
-│   └── requirements.txt     # データサイエンス用ライブラリ
-│
-└── shared/                  # 共通設定・ユーティリティ
-    ├── hooks/               # Git hooks テンプレート
-    ├── github-actions/      # 再利用可能な Actions
-    └── common-configs/      # 共通設定ファイル
+└── shared/                  # IDE共通設定
+    ├── gitignore-templates/ # 技術別gitignoreテンプレート
+    ├── github-actions/      # 汎用GitHub Actions
+    ├── docker-templates/    # Dockerファイルテンプレート
+    └── docs/                # 設定方法・使い方ドキュメント
 
 ```
 
-### 現在の構成（移行準備中）
+### 現在の構成（移行中）
 
-現在は Windsurf 用の汎用ルールが配置されています。今後、技術スタック別のテンプレートに再編成予定：
+現在は主にWindsurf用の設定が配置されており、Claude Code、Cursor用の構成に順次展開予定：
 
 ```
-.windsurf/rules/     # → shared/ や各技術スタックに移行予定
-.windsurf/workflows/ # → 技術スタック別ワークフローに分割予定
+.windsurf/rules/     # → Windsurf/ に移行済み
+.windsurf/workflows/ # → Windsurf/ に移行済み
+.github/workflows/   # → shared/github-actions/ に移行予定
 ```
 
 ## 解決する問題
 
-### 😫 現在の問題
-- 新規プロジェクト作成の度に AI IDE の初期設定を一から行う必要がある
-- 技術スタックごとに最適な `.cursorrules` や `CLAUDE.md` を毎回作成する手間
-- プロジェクト固有のフック、設定ファイル、GitHub Actions の設定が面倒
-- チーム間で AI IDE の設定が統一されていない
+### 😫 コンテキストエンジニアリングの初期作業が面倒
+- **新規プロジェクトの度に発生**: AI アシスタントに適切なコンテキストを与えるための設定作業
+- **時間がかかる**: `.cursorrules`、`CLAUDE.md`、ワークフロー設定を一から考える必要
+- **ベストプラクティスがわからない**: 効果的なコンテキスト設計の知識不足
+- **設定忘れ**: プロジェクト途中でAI支援が不十分になる問題
+- **チーム不統一**: メンバー間でAIアシスタントの設定品質にばらつき
 
 ### ✨ このリポジトリで実現すること
-- **1分で完了**: `cp -r python/* /your-new-project/` でセットアップ完了
-- **即実運用**: コピー直後から AI IDE が最適な状態で動作
-- **技術スタック特化**: Python、TypeScript、React など、各技術に最適化済み
-- **チーム標準化**: 組織全体で一貫した AI 開発環境
+- **初期作業を完全スキップ**: コンテキストエンジニアリングの初期段階を0秒で完了
+- **即座に高品質なAI支援**: コピー直後から最適化されたAIアシスタントが利用可能
+- **IDE別最適化**: Claude Code、Cursor、Windsurf それぞれに特化した設定
+- **ベストプラクティス適用済み**: 実績のあるコンテキスト設計パターンを標準装備
+- **チーム統一**: 組織全体で一貫したAI開発体験を実現
 
 ## 主な特徴
 
-### 1. ワンコマンドセットアップ
+### 1. IDE別コンテキスト最適化
+
+各AIツールの特性に合わせた専用コンテキスト設定：
 
 ```bash
-# 新しい Python プロジェクトの場合
-cp -r context-storage/python/* /your-new-project/
-cd /your-new-project
-# → 即座に Claude Code、Cursor、Windsurf が最適化状態で利用可能！
+# Claude Code の場合
+cp context-storage/Claude-Code/CLAUDE.md /your-project/
+cp context-storage/Claude-Code/commands.md /your-project/
+
+# Cursor の場合  
+cp context-storage/Cursor/.cursorrules /your-project/
+
+# Windsurf の場合
+cp -r context-storage/Windsurf/ /your-project/.windsurf/
 ```
 
-### 2. 技術スタック別最適化
+### 2. コンテキストエンジニアリング不要
 
-各技術スタックに特化した設定：
+事前に最適化された汎用コンテキストを提供：
 
-- **Python**: データサイエンス、Web開発、CLI ツール向けルール
-- **TypeScript**: Node.js、フロントエンド、フルスタック向け設定
-- **React**: コンポーネント設計、状態管理、パフォーマンス最適化
-- **データサイエンス**: Jupyter、pandas、機械学習向け環境
+- **汎用性と専門性のバランス**: どのプロジェクトでも適用可能な設定
+- **実績ベース**: 実際の開発で効果が実証されたパターン
+- **継続的改善**: コミュニティフィードバックによる品質向上
+- **学習効果**: 設定内容を通じてベストプラクティスを学習可能
 
-### 3. 全IDE対応済み
+### 3. 即座に実運用レベル
 
-各テンプレートには以下が含まれます：
+コピー直後から以下が利用可能：
 
-- **`.cursorrules`**: Cursor 用のプロジェクト固有ルール
-- **`CLAUDE.md`**: Claude Code 用のコンテキストとコマンド
-- **`.windsurf/`**: Windsurf 用のルールとワークフロー
-- **設定ファイル**: `tsconfig.json`、`pyproject.toml` など
+- **Claude Code**: 適切なコンテキスト理解、効果的なコマンド補完
+- **Cursor**: 最適化されたコード生成、リファクタリング支援
+- **Windsurf**: 体系化されたワークフロー、品質管理ルール
+- **共通設定**: Git hooks、GitHub Actions、Docker設定など
 
 ## 使用方法
 
-### 🚀 Step 1: 新規プロジェクト作成
+### 🚀 Step 1: プロジェクト準備とIDE選択
 
 ```bash
 # 1. 新しいプロジェクトディレクトリを作成
 mkdir my-awesome-project
 cd my-awesome-project
 
-# 2. 技術スタックに応じたテンプレートをコピー
-cp -r /path/to/context-storage/python/* .        # Python プロジェクトの場合
-# または
-cp -r /path/to/context-storage/typescript/* .    # TypeScript プロジェクトの場合
-# または  
-cp -r /path/to/context-storage/react/* .         # React プロジェクトの場合
+# 2. 使用するAI IDEに応じてコンテキストをコピー
 ```
 
-### ⚡ Step 2: 即座に AI IDE で開発開始
+### ⚡ Step 2: IDE別コンテキスト設定
+
+#### Claude Code を使用する場合
+```bash
+cp /path/to/context-storage/Claude-Code/CLAUDE.md .
+cp /path/to/context-storage/Claude-Code/commands.md .
+cp /path/to/context-storage/Claude-Code/settings.json .
+
+# 必要に応じてプロジェクトタイプ別テンプレートも追加
+cp /path/to/context-storage/Claude-Code/templates/python-context.md ./CONTEXT.md
+```
+
+#### Cursor を使用する場合
+```bash
+cp /path/to/context-storage/Cursor/.cursorrules .
+
+# プロジェクトタイプに応じてより具体的なルールも選択可能
+cp /path/to/context-storage/Cursor/project-templates/.cursorrules-python ./.cursorrules
+```
+
+#### Windsurf を使用する場合
+```bash
+cp -r /path/to/context-storage/Windsurf/ ./.windsurf/
+
+# プロジェクトタイプ別コンテキストを選択
+cp /path/to/context-storage/Windsurf/contexts/web-app.md ./.windsurf/project-context.md
+```
+
+### 🎯 Step 3: 即座にAI開発開始
 
 ```bash
-# IDE を起動（設定は既に最適化済み）
+# IDE を起動（コンテキストエンジニアリングは既に完了済み！）
 cursor .        # Cursor の場合
-code .          # Claude Code の場合
+code .          # Claude Code の場合  
 # Windsurf でプロジェクトを開く
 ```
 
-**これだけで完了！** AI アシスタントが最適化された状態で利用可能になります。
+**これだけで完了！** AIアシスタントが最適化されたコンテキストで即座に高品質な支援を開始します。
 
-### 🛠️ Step 3: 必要に応じてカスタマイズ
+## 具体的な効果例
 
-各テンプレートの `setup-commands.md` を参照して、追加のセットアップを実行：
+### 🎯 コンテキストエンジニアリング効果の比較
 
+#### 従来の方法（時間がかかる）
 ```bash
-# Python の場合の例
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+mkdir new-project && cd new-project
+
+# 毎回これらの作業が必要：
+# 1. .cursorrules を一から作成（30分）
+# 2. CLAUDE.md でプロジェクト説明作成（20分）
+# 3. Windsurf ワークフロー設定（15分）
+# 4. 各IDE設定の調整・最適化（30分）
+# 合計: 約95分の初期設定時間
 ```
 
-## 具体的な使用例
-
-### Python データサイエンスプロジェクトの場合
-
+#### Context Storage使用時（即座に完了）
 ```bash
-mkdir ml-analysis
-cd ml-analysis
-cp -r context-storage/data-science/* .
+mkdir new-project && cd new-project
 
-# IDE で開くと、以下が自動で設定済み：
-# - Jupyter notebook 向けのルール
-# - pandas/numpy 最適化設定  
-# - ML ライブラリのインポート補完
-# - データ可視化のベストプラクティス
+# IDE別に選択してコピーするだけ：
+cp context-storage/Claude-Code/CLAUDE.md .          # 5秒
+cp context-storage/Cursor/.cursorrules .            # 5秒  
+cp -r context-storage/Windsurf/ ./.windsurf/        # 10秒
+
+# 合計: 20秒で最適化されたAI環境が完成
+# → 95分の時間短縮！
 ```
 
-### TypeScript Web アプリの場合
+### 🚀 実際の開発体験の違い
 
-```bash
-mkdir my-web-app  
-cd my-web-app
-cp -r context-storage/typescript/* .
-npm install
+#### Context Storage 適用前
+- AIが毎回プロジェクトの文脈を理解するのに時間がかかる
+- コーディング規約やベストプラクティスを都度説明する必要
+- IDE間でAI支援の品質にばらつきがある
 
-# IDE で開くと、以下が自動で設定済み：
-# - TypeScript 厳格設定
-# - ESLint/Prettier ルール
-# - フロントエンド向けのコード補完
-# - パフォーマンス最適化のガイドライン
-```
+#### Context Storage 適用後  
+- プロジェクト開始時点でAIが適切な文脈を理解済み
+- 一貫したコーディング規約とベストプラクティスが自動適用
+- どのIDEでも同等の高品質なAI支援を即座に利用可能
 
 ## 貢献方法
 
-### 新しい技術スタックテンプレートの追加
+### IDE別コンテキスト改善
 
-1. `technology-name/` ディレクトリを作成（例：`go/`, `rust/`, `vue/`）
-2. 以下のファイルを作成：
-   ```
-   technology-name/
-   ├── .cursorrules          # Cursor 用ルール
-   ├── CLAUDE.md             # Claude Code 用設定
-   ├── .windsurf/            # Windsurf 用設定
-   ├── .gitignore            # 技術固有の gitignore
-   ├── 設定ファイル           # その技術の標準設定
-   └── setup-commands.md     # セットアップ手順
-   ```
-3. 実際のプロジェクトで検証
-4. プルリクエストを作成
+#### Claude Code コンテキストの改善
+1. `Claude-Code/` ディレクトリで設定を改善
+2. 以下の観点で最適化：
+   - CLAUDE.md の文脈説明の明確性
+   - commands.md のコマンド網羅性
+   - hooks/ の実用性
+3. 実際のプロジェクトで効果を検証
+4. プルリクエストで改善提案
 
-### 既存テンプレートの改善
+#### Cursor ルールの改善  
+1. `Cursor/` ディレクトリで.cursorrulesを改善
+2. 以下を重視：
+   - より効果的なコード生成のためのルール
+   - プロジェクトタイプ別テンプレートの拡充
+   - 推奨拡張機能の最適化
+3. 複数のプロジェクトタイプで検証
+4. プルリクエストで改善提案
 
-1. 該当する技術スタックディレクトリで改善を実施
-2. AI IDE での動作確認
-3. `setup-commands.md` の更新（必要に応じて）
-4. プルリクエストで改善を提案
+#### Windsurf ワークフロー改善
+1. `Windsurf/` ディレクトリで設定を改善  
+2. 以下の領域で改善：
+   - rules/ の汎用性と実用性
+   - workflows/ の効率性
+   - contexts/ のプロジェクトタイプ網羅
+3. 実開発での効果測定
+4. プルリクエストで改善提案
 
-### テンプレート作成のガイドライン
+### 新しいAIツール対応
 
-各テンプレートには以下を含めてください：
+新しいAI対応IDEやコーディングエージェントへの対応：
 
-- **`.cursorrules`**: 技術特化のコーディングルール、ベストプラクティス
-- **`CLAUDE.md`**: プロジェクト構成説明、よく使うコマンド、注意点
-- **`.windsurf/`**: ワークフロー、自動化ルール
-- **設定ファイル**: その技術の標準的な設定（厳格めに設定）
-- **`setup-commands.md`**: 初期セットアップの具体的手順
+1. `New-Tool/` ディレクトリを作成
+2. そのツールの特性に合わせたコンテキスト設計
+3. 既存IDE設定との整合性確認  
+4. ドキュメント作成とテスト
+5. プルリクエストで提案
+
+### コンテキスト設計のガイドライン
+
+効果的なコンテキスト設計の原則：
+
+- **汎用性**: 特定プロジェクトに依存しない設定
+- **即効性**: コピー直後から効果を発揮する設定
+- **学習効果**: 設定内容からベストプラクティスを学べる構成
+- **継続性**: プロジェクトの成長に合わせて拡張可能な設計
 
 ## 想定される利用シーン
 
-### 🏢 チーム・組織での活用
-- **新人オンボーディング**: 新メンバーが初日から最適化されたAI環境で開発開始
-- **プロジェクト標準化**: チーム全体で一貫したAI設定とコーディング規約
-- **技術移行**: 新しい技術スタックの学習時に最適な環境を即座に構築
+### 🏢 チーム・組織でのコンテキストエンジニアリング効率化
+- **新人オンボーディング**: 初日からベテランと同等のAI開発環境を提供
+- **プロジェクト間移動**: チームメンバーが異なるプロジェクトに参加する際の即座の環境構築
+- **AI活用標準化**: 組織全体でAIアシスタントの効果を最大化する統一基準
+- **知識の蓄積**: 効果的なコンテキスト設計ノウハウの組織内共有
 
-### 🚀 個人開発での活用  
-- **プロトタイピング**: アイデアを素早く形にするための最適化された環境
-- **学習効率化**: 新しい技術の学習時にベストプラクティスが適用された状態から開始
-- **副業・個人案件**: 案件ごとに技術スタックが変わる場合の迅速な環境構築
+### 🚀 個人開発でのコンテキスト作業削減
+- **アイデア検証**: プロトタイプ作成時のセットアップ時間を最小化
+- **マルチプロジェクト**: 複数の個人プロジェクト間でのコンテキスト切り替え
+- **学習加速**: 新技術習得時にコンテキスト作成ではなく学習に集中
+- **フリーランス効率化**: クライアントワーク開始時の迅速な環境構築
 
-### 💡 教育・研修での活用
-- **プログラミング教育**: 学習者が環境設定に時間を取られることなく学習に集中
-- **技術研修**: 企業研修で統一された環境を素早く提供
-- **ハッカソン**: 参加者が開発に集中できる環境を即座に提供
+### 💡 教育・研修でのAI活用最大化
+- **プログラミング教育**: 学習者がコンテキスト設計を学ぶ前からAI支援を活用
+- **企業研修**: 統一されたAI環境での技術研修実施
+- **ハッカソン**: 参加者が開発のコアに集中できる環境即座提供
+- **コンテキストエンジニアリング教育**: 効果的な設定例を通じた学習機会
 
 ## 今後の展望
 
-### 短期目標
-- **主要技術スタックの網羅**: Go, Rust, Vue.js, Swift, Kotlin など
-- **より詳細な設定**: フレームワーク別、用途別のサブテンプレート
-- **セットアップ自動化**: シェルスクリプトによるワンコマンドセットアップ
+### 短期目標（コンテキスト品質向上）
+- **IDE別最適化の深化**: Claude Code、Cursor、Windsurf それぞれの特性を活かした設定
+- **プロジェクトタイプ別テンプレート**: Web、API、CLI、データ分析など用途別コンテキスト
+- **効果測定機能**: AI支援効果を定量的に評価できる仕組み
 
-### 中長期目標  
-- **AIツール拡張**: GitHub Copilot、Tabnine などへの対応
-- **クラウド統合**: GitHub Codespaces、GitPod への対応
-- **設定同期ツール**: 複数プロジェクト間での設定同期機能
-- **コミュニティ主導**: ユーザー投稿による設定テンプレートの拡充
+### 中長期目標（エコシステム拡張）
+- **新AIツール対応**: GitHub Copilot、Tabnine、その他新興AIツールへの拡張
+- **自動コンテキスト生成**: プロジェクト分析による最適コンテキストの自動作成
+- **コミュニティ知見集約**: ユーザー投稿による効果的なコンテキストパターンの共有
+- **IDE間連携**: 複数IDE使用時の一貫したコンテキスト管理
 
 ## ライセンス
 
